@@ -1,4 +1,4 @@
-# Elo Flutter App
+﻿# Elo Flutter App
 
 A modern Flutter mobile application with Supabase backend integration for real-time data and authentication.
 
@@ -20,8 +20,8 @@ A modern Flutter mobile application with Supabase backend integration for real-t
 
 ### 1. Configure Supabase
 
-1. Create a new project at [supabase.com](https://supabase.com)
-2. Get your project URL and Anon Key from the project settings
+1. Create a new project at [supabase.com](https://supabase.com).
+2. Get your project URL and Anon Key from the project settings.
 3. Update `lib/main.dart` with your credentials:
 
 ```dart
@@ -45,14 +45,14 @@ flutter run
 
 ## Project Structure
 
-```
+```text
 lib/
-├── main.dart              # App entry point
-├── screens/
-│   ├── login_screen.dart  # Authentication UI
-│   └── home_screen.dart   # Home page
-└── services/
-    └── auth_service.dart  # Supabase authentication service
+ main.dart              # App entry point
+ screens/
+    login_screen.dart  # Authentication UI
+    home_screen.dart   # Home page
+ services/
+     auth_service.dart  # Supabase authentication service
 ```
 
 ## Configuration
@@ -61,16 +61,16 @@ lib/
 
 Create a `.env` file for sensitive configuration (not included in version control):
 
-```
+```bash
 SUPABASE_URL=your_url_here
 SUPABASE_ANON_KEY=your_key_here
 ```
 
 ## Development
 
-- Use `flutter analyze` for linting
-- Use `flutter test` for unit tests
-- Use `flutter pub upgrade` to update dependencies
+- Use `flutter analyze` for linting.
+- Use `flutter test` for unit tests.
+- Use `flutter pub upgrade` to update dependencies.
 
 ## Deployment
 
