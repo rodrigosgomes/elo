@@ -1,0 +1,43 @@
+# Flutter/Dart
+.dart_tool/
+.packages
+build/
+/.idea/
+/.vscode/
+/.gradle/
+/.pub-cache/
+
+# Android
+**/android/**/gradle-wrapper.jar
+**/android/**/gradle-wrapper.properties
+android/app/**/local.properties
+
+# iOS
+Pods/
+.ios/Flutter/Flutter.framework
+.ios/Flutter/Flutter.podspec
+
+# macOS
+/.dart_tool/
+/.flutter-plugins
+
+# VSCode
+.vscode/*
+!.vscode/launch.json
+!.vscode/tasks.json
+
+# Logs
+logs/
+*.log
+
+# Generated files
+pubspec.lock
+generated_plugin_registrant.dart
+
+# Sensitive
+*.keystore
+key.properties
+
+# Assets placeholders
+assets/images/.gitkeep
+assets/icons/.gitkeep
