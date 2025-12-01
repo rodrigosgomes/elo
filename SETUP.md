@@ -23,15 +23,15 @@
 
 2. **Install Flutter Dependencies**
 
-```bash
-flutter pub get
-```
+    ```bash
+    flutter pub get
+    ```
 
 3. **Run the Application**
 
-```bash
-flutter run
-```
+    ```bash
+    flutter run
+    ```
 
 4. **Configure Database Schema** (in Supabase Dashboard)
 
