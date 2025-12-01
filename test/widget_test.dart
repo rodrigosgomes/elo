@@ -7,24 +7,30 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:elo/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  TestWidgetsFlutterBinding.ensureInitialized();
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+  setUpAll(() async {
+    SharedPreferences.setMockInitialValues(const {});
+    await Supabase.initialize(
+      url: 'https://hqitwoutbiasulgaxpoa.supabase.co',
+      anonKey:
+          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxaXR3b3V0Ymlhc3VsZ2F4cG9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1NTI4MTIsImV4cCI6MjA4MDEyODgxMn0.pWVKcGK1v_ZPOOdK2YFN42AFCf-RpLZ-fxPOaNjgvXY',
+    );
+  });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+  testWidgets('shows login screen when no session is available',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(const EloApp());
+    await tester.pumpAndSettle();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.byType(MaterialApp), findsOneWidget);
+    expect(find.text('Elo'), findsWidgets);
+    expect(find.text('Sign In'), findsOneWidget);
   });
 }

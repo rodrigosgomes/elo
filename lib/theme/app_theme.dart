@@ -23,8 +23,8 @@ class AppTheme {
         foregroundColor: colorScheme.onSurface,
         elevation: 0,
         centerTitle: true,
-        titleTextStyle: textTheme.titleLarge
-            ?.copyWith(color: colorScheme.onSurface),
+        titleTextStyle:
+            textTheme.titleLarge?.copyWith(color: colorScheme.onSurface),
       ),
       cardTheme: CardThemeData(
         color: isDark ? _DarkColors.surface1 : _LightColors.surface1,
@@ -35,8 +35,7 @@ class AppTheme {
         ),
       ),
       chipTheme: ChipThemeData(
-        backgroundColor:
-            isDark ? _DarkColors.chipBg : _LightColors.chipBg,
+        backgroundColor: isDark ? _DarkColors.chipBg : _LightColors.chipBg,
         selectedColor: colorScheme.primary.withValues(alpha: 0.16),
         disabledColor: colorScheme.surfaceContainerHighest,
         labelStyle: textTheme.labelMedium?.copyWith(
@@ -224,30 +223,24 @@ extension AppSemanticColors on ThemeData {
 
   Color get info => _BaseColors.info;
 
-  Color get lineSoft =>
-      brightness == Brightness.dark
-          ? _DarkColors.lineSoft
-          : _LightColors.lineSoft;
+  Color get lineSoft => brightness == Brightness.dark
+      ? _DarkColors.lineSoft
+      : _LightColors.lineSoft;
 
-  Color get lineStrong =>
-      brightness == Brightness.dark
-          ? _DarkColors.lineStrong
-          : _LightColors.lineStrong;
+  Color get lineStrong => brightness == Brightness.dark
+      ? _DarkColors.lineStrong
+      : _LightColors.lineStrong;
 
   Color get chipBackground =>
-      brightness == Brightness.dark
-          ? _DarkColors.chipBg
-          : _LightColors.chipBg;
+      brightness == Brightness.dark ? _DarkColors.chipBg : _LightColors.chipBg;
 
-  Color get textSecondary =>
-      brightness == Brightness.dark
-          ? _DarkColors.textSecondary
-          : _LightColors.textSecondary;
+  Color get textSecondary => brightness == Brightness.dark
+      ? _DarkColors.textSecondary
+      : _LightColors.textSecondary;
 
-  Color get textTertiary =>
-      brightness == Brightness.dark
-          ? _DarkColors.textTertiary
-          : _LightColors.textTertiary;
+  Color get textTertiary => brightness == Brightness.dark
+      ? _DarkColors.textTertiary
+      : _LightColors.textTertiary;
 }
 
 const ColorScheme _darkScheme = ColorScheme(

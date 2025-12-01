@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -23,9 +23,8 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: const Icon(Icons.logout),
             onPressed: () async {
               await _authService.signOut();
-              if (mounted) {
-                Navigator.of(context).pushNamedAndRemoveUntil('/', (_) => false);
-              }
+              if (!context.mounted) return;
+              Navigator.of(context).pushNamedAndRemoveUntil('/', (_) => false);
             },
           ),
         ],
