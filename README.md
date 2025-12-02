@@ -1,82 +1,87 @@
 ﻿# Elo Flutter App
 
-A modern Flutter mobile application with Supabase backend integration for real-time data and authentication.
+A modern Flutter application that pairs Supabase Auth/Realtime with a Material 3 Dark Luxury experience. The MVP focuses on the "The Vault" dashboard plus the Bens, Documentos, Legado, Diretivas e Emergência journeys described in the PRD.
 
 ## Features
 
-- User authentication (Sign In / Sign Up) via Supabase
-- Real-time database synchronization
-- Material 3 design with dark mode support
-- State management with Provider
-- Local storage support
+- Supabase authentication with session-aware routing and logout flows
+- Dashboard "The Vault" featuring checklist FLX-01, KPI telemetry, pillar cards, and timeline actions
+- Real-time synchronization plus trust/audit event logging
+- Material 3 Dark Luxury theme with accessibility-friendly tokens
+- Provider-based controllers (e.g., `DashboardController`) orchestrating Supabase queries and telemetry
+- Local storage + HTTP FX service for cached currency conversion when summarising assets
 
 ## Prerequisites
 
-- Flutter SDK 3.0.0 or higher
-- Dart 3.0.0 or higher
-- Active Supabase project
+- Flutter SDK 3.0.0+
+- Dart 3.0.0+
+- Active Supabase project (URL + anon key)
 
 ## Setup Instructions
 
-### 1. Configure Supabase
+1. **Configure Supabase**
 
-1. Create a new project at [supabase.com](https://supabase.com).
-2. Get your project URL and Anon Key from the project settings.
-3. Update `lib/main.dart` with your credentials:
+   ```dart
+   await Supabase.initialize(
+     url: 'YOUR_SUPABASE_URL',
+     anonKey: 'YOUR_SUPABASE_ANON_KEY',
+   );
+   ```
 
-```dart
-await Supabase.initialize(
-  url: 'YOUR_SUPABASE_URL',
-  anonKey: 'YOUR_SUPABASE_ANON_KEY',
-);
-```
+2. **Install Dependencies**
 
-### 2. Install Dependencies
+   ```bash
+   flutter pub get
+   ```
 
-```bash
-flutter pub get
-```
+3. **Run the App**
 
-### 3. Run the App
+   ```bash
+   flutter run
+   ```
 
-```bash
-flutter run
-```
+4. **Run Dashboard Tests**
+
+   ```bash
+   flutter test test/screens/dashboard/dashboard_screen_test.dart
+   ```
 
 ## Project Structure
 
 ```text
 lib/
- main.dart              # App entry point
- screens/
-    login_screen.dart  # Authentication UI
-    home_screen.dart   # Home page
- services/
-     auth_service.dart  # Supabase authentication service
+  main.dart                       # App entry point + routing guard
+  screens/
+    login_screen.dart            # Auth UI
+    dashboard/
+      dashboard_screen.dart      # The Vault UI & widgets
+      dashboard_controller.dart  # Provider/controller + telemetry helpers
+      dashboard_repository.dart  # Supabase data access layer
+    settings/security_settings_screen.dart
+    common/coming_soon_screen.dart
+  services/
+    auth_service.dart
+    fx_service.dart
+  theme/app_theme.dart            # Dark Luxury tokens + extensions
 ```
 
 ## Configuration
 
-### Environment Variables
-
-Create a `.env` file for sensitive configuration (not included in version control):
-
-```bash
-SUPABASE_URL=your_url_here
-SUPABASE_ANON_KEY=your_key_here
-```
+- Keep Supabase keys outside the repo (`.env` or `--dart-define`).
+- Reference `docs/04-guides/setup-ambiente.md` for environment specifics and PRD links.
 
 ## Development
 
-- Use `flutter analyze` for linting.
-- Use `flutter test` for unit tests.
-- Use `flutter pub upgrade` to update dependencies.
+- Lint: `flutter analyze`
+- Format: `dart format .`
+- Tests: `flutter test` (or specific suites as above)
+- When adding Supabase tables/policies, align with `docs/05-prompts` and the data-model prompt.
 
 ## Deployment
 
-- For iOS: `flutter build ios`
-- For Android: `flutter build apk` or `flutter build appbundle`
-- For Web: `flutter build web`
+- Android: `flutter build apk` / `flutter build appbundle`
+- iOS: `flutter build ios`
+- Web/Desktop: `flutter build web` / `flutter build windows` (as needed)
 
 ## License
 
