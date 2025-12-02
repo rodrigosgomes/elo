@@ -42,6 +42,8 @@ void main() {
 
       await tester.pumpWidget(_buildHarness(authService));
 
+      // Clear default credentials to mimic blank input scenario.
+      await tester.enterText(find.bySemanticsLabel('E-mail'), '');
       await tester.ensureVisible(find.text('Esqueci minha senha'));
       await tester.tap(find.text('Esqueci minha senha'));
       await tester.pump();
