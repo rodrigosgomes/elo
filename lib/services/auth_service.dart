@@ -1,23 +1,31 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-class AuthService {
-  final _supabase = Supabase.instance.client;
+import '../config/app_config.dart';
 
-  Future<AuthResponse> signUp({
+class AuthService {
+  AuthService({required AppConfig config, SupabaseClient? supabaseClient})
+      : _supabase = supabaseClient ?? Supabase.instance.client,
+        _emailRedirectUrl = config.emailRedirectUrl;
+
+  final SupabaseClient _supabase;
+  final String _emailRedirectUrl;
+
+  Future<void> signUp({
     required String email,
     required String password,
   }) async {
-    return await _supabase.auth.signUp(
+    await _supabase.auth.signUp(
       email: email,
       password: password,
+      emailRedirectTo: _emailRedirectUrl,
     );
   }
 
-  Future<AuthResponse> signIn({
+  Future<void> signIn({
     required String email,
     required String password,
   }) async {
-    return await _supabase.auth.signInWithPassword(
+    await _supabase.auth.signInWithPassword(
       email: email,
       password: password,
     );
@@ -25,6 +33,16 @@ class AuthService {
 
   Future<void> signOut() async {
     await _supabase.auth.signOut();
+  }
+
+  Future<void> sendPasswordReset({
+    required String email,
+    String? redirectTo,
+  }) async {
+    await _supabase.auth.resetPasswordForEmail(
+      email,
+      redirectTo: redirectTo ?? _emailRedirectUrl,
+    );
   }
 
   User? getCurrentUser() {

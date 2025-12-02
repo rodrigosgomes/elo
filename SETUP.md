@@ -18,20 +18,28 @@
 
 1. **Configure Supabase Credentials**
 
-   - Update your Supabase URL and Anon Key in `lib/main.dart`.
+   - Do **not** edit `lib/main.dart`. Instead, pass credentials via `--dart-define` so `AppConfig` can read them at runtime:
+
+     ```bash
+     flutter run \
+         --dart-define=SUPABASE_URL=https://xyzcompany.supabase.co \
+         --dart-define=SUPABASE_ANON_KEY=your-anon-key \
+         --dart-define=SUPABASE_EMAIL_REDIRECT_URL=https://xyzcompany.supabase.co/auth/v1/callback
+     ```
+
    - Set up authentication tables in your Supabase project.
 
 2. **Install Flutter Dependencies**
 
-    ```bash
-    flutter pub get
-    ```
+   ```bash
+   flutter pub get
+   ```
 
 3. **Run the Application**
 
-    ```bash
-    flutter run
-    ```
+   ```bash
+   flutter run
+   ```
 
 4. **Configure Database Schema** (in Supabase Dashboard)
 

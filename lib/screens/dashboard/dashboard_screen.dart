@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -20,21 +21,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
   late final DashboardController _controller;
   late final bool _ownsController;
   bool _canRender = false;
+  late final Future<void> _localeInitialization;
 
   @override
   void initState() {
     super.initState();
+    _localeInitialization = initializeDateFormatting('pt_BR');
     _ownsController = widget.controllerOverride == null;
     _controller = widget.controllerOverride ?? DashboardController();
     if (!_ownsController) {
-      _canRender = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _renderAfterLocale();
+      });
       return;
     }
     final session = Supabase.instance.client.auth.currentSession;
     if (session != null) {
-      _canRender = true;
       WidgetsBinding.instance.addPostFrameCallback((_) async {
-        await _controller.bootstrap();
+        await _renderAfterLocale(() async {
+          await _controller.bootstrap();
+        });
       });
     } else {
       WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -47,11 +53,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final auth = Supabase.instance.client.auth;
     final current = auth.currentSession;
     if (current != null) {
-      if (!mounted) return;
-      setState(() {
-        _canRender = true;
+      await _renderAfterLocale(() async {
+        await _controller.bootstrap();
       });
-      await _controller.bootstrap();
       return;
     }
 
@@ -64,10 +68,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
       Navigator.of(context).pushNamedAndRemoveUntil('/login', (_) => false);
       return;
     }
-    setState(() {
-      _canRender = true;
+    await _renderAfterLocale(() async {
+      await _controller.bootstrap();
     });
-    await _controller.bootstrap();
+  }
+
+  Future<void> _renderAfterLocale([Future<void> Function()? afterReady]) async {
+    await _localeInitialization;
+    if (!mounted) return;
+    if (!_canRender) {
+      setState(() {
+        _canRender = true;
+      });
+    }
+    if (afterReady != null) {
+      await afterReady();
+    }
   }
 
   @override
@@ -280,9 +296,15 @@ class _TwoFactorBanner extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 12),
-            ElevatedButton(
-              onPressed: onConfigure,
-              child: const Text('Configurar 2FA'),
+            Flexible(
+              fit: FlexFit.loose,
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: ElevatedButton(
+                  onPressed: onConfigure,
+                  child: const Text('Configurar 2FA'),
+                ),
+              ),
             ),
           ],
         ),

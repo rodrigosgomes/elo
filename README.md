@@ -5,6 +5,7 @@ A modern Flutter application that pairs Supabase Auth/Realtime with a Material 3
 ## Features
 
 - Supabase authentication with session-aware routing and logout flows
+- Material 3 login screen with cadastro, reset de senha e redirecionamento seguro ao dashboard
 - Dashboard "The Vault" featuring checklist FLX-01, KPI telemetry, pillar cards, and timeline actions
 - Real-time synchronization plus trust/audit event logging
 - Material 3 Dark Luxury theme with accessibility-friendly tokens
@@ -19,14 +20,18 @@ A modern Flutter application that pairs Supabase Auth/Realtime with a Material 3
 
 ## Setup Instructions
 
-1. **Configure Supabase**
+1. **Provide Supabase Credentials via `--dart-define`**
 
-   ```dart
-   await Supabase.initialize(
-     url: 'YOUR_SUPABASE_URL',
-     anonKey: 'YOUR_SUPABASE_ANON_KEY',
-   );
+   `lib/config/app_config.dart` reads runtime values from compile-time defines. Run Flutter commands with:
+
+   ```bash
+   flutter run \
+     --dart-define=SUPABASE_URL=https://xyzcompany.supabase.co \
+     --dart-define=SUPABASE_ANON_KEY=your-anon-key \
+     --dart-define=SUPABASE_EMAIL_REDIRECT_URL=https://xyzcompany.supabase.co/auth/v1/callback
    ```
+
+   The redirect override is optional; if omitted the config defaults to `<SUPABASE_URL>/auth/v1/callback`.
 
 2. **Install Dependencies**
 
@@ -67,7 +72,8 @@ lib/
 
 ## Configuration
 
-- Keep Supabase keys outside the repo (`.env` or `--dart-define`).
+- Centralized in `lib/config/app_config.dart`; set values with `--dart-define` or your launch configuration.
+- Keep Supabase keys outside the repo and avoid hard-coding secrets.
 - Reference `docs/04-guides/setup-ambiente.md` for environment specifics and PRD links.
 
 ## Development

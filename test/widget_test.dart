@@ -10,6 +10,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:elo/config/app_config.dart';
 import 'package:elo/main.dart';
 
 void main() {
@@ -26,11 +27,19 @@ void main() {
 
   testWidgets('shows login screen when no session is available',
       (WidgetTester tester) async {
-    await tester.pumpWidget(const EloApp());
+    final config = AppConfig(
+      supabaseUrl: 'https://hqitwoutbiasulgaxpoa.supabase.co',
+      supabaseAnonKey:
+          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxaXR3b3V0Ymlhc3VsZ2F4cG9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1NTI4MTIsImV4cCI6MjA4MDEyODgxMn0.pWVKcGK1v_ZPOOdK2YFN42AFCf-RpLZ-fxPOaNjgvXY',
+      emailRedirectUrl:
+          'https://hqitwoutbiasulgaxpoa.supabase.co/auth/v1/callback',
+    );
+
+    await tester.pumpWidget(EloApp(config: config));
     await tester.pumpAndSettle();
 
     expect(find.byType(MaterialApp), findsOneWidget);
-    expect(find.text('Elo'), findsWidgets);
-    expect(find.text('Sign In'), findsOneWidget);
+    expect(find.text('Bem-vindo ao Elo'), findsOneWidget);
+    expect(find.text('Entrar'), findsOneWidget);
   });
 }

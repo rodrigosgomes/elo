@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
 import '../services/auth_service.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -9,11 +11,10 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final _authService = AuthService();
-
   @override
   Widget build(BuildContext context) {
-    final user = _authService.getCurrentUser();
+    final authService = context.read<AuthService>();
+    final user = authService.getCurrentUser();
 
     return Scaffold(
       appBar: AppBar(
@@ -22,7 +23,7 @@ class _HomeScreenState extends State<HomeScreen> {
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
-              await _authService.signOut();
+              await authService.signOut();
               if (!context.mounted) return;
               Navigator.of(context).pushNamedAndRemoveUntil('/', (_) => false);
             },
