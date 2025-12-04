@@ -1,10 +1,12 @@
 import 'package:elo/screens/dashboard/dashboard_controller.dart';
 import 'package:elo/screens/dashboard/dashboard_repository.dart';
 import 'package:elo/screens/dashboard/dashboard_screen.dart';
+import 'package:elo/services/assets_event_bus.dart';
 import 'package:elo/services/fx_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -38,9 +40,14 @@ void main() {
     });
 
     testWidgets('renders checklist when incomplete', (tester) async {
+      final bus = AssetsEventBus();
+      addTearDown(bus.dispose);
       await tester.pumpWidget(
-        MaterialApp(
-          home: DashboardScreen(controllerOverride: controller),
+        Provider<AssetsEventBus>.value(
+          value: bus,
+          child: MaterialApp(
+            home: DashboardScreen(controllerOverride: controller),
+          ),
         ),
       );
       await tester.pumpAndSettle();
@@ -59,9 +66,14 @@ void main() {
     });
 
     testWidgets('allows dismissing trust header', (tester) async {
+      final bus = AssetsEventBus();
+      addTearDown(bus.dispose);
       await tester.pumpWidget(
-        MaterialApp(
-          home: DashboardScreen(controllerOverride: controller),
+        Provider<AssetsEventBus>.value(
+          value: bus,
+          child: MaterialApp(
+            home: DashboardScreen(controllerOverride: controller),
+          ),
         ),
       );
       await tester.pumpAndSettle();

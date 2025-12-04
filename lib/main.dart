@@ -6,7 +6,12 @@ import 'config/app_config.dart';
 import 'screens/common/coming_soon_screen.dart';
 import 'screens/dashboard/dashboard_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/bens/asset_detail_sheet.dart';
+import 'screens/bens/asset_form_sheet.dart';
+import 'screens/bens/asset_proofs_sheet.dart';
+import 'screens/bens/bens_screen.dart';
 import 'screens/settings/security_settings_screen.dart';
+import 'services/assets_event_bus.dart';
 import 'services/auth_service.dart';
 import 'theme/app_theme.dart';
 
@@ -34,6 +39,10 @@ class EloApp extends StatelessWidget {
       providers: [
         Provider<AppConfig>.value(value: config),
         Provider<AuthService>(create: (_) => AuthService(config: config)),
+        Provider<AssetsEventBus>(
+          create: (_) => AssetsEventBus(),
+          dispose: (_, bus) => bus.dispose(),
+        ),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -46,13 +55,9 @@ class EloApp extends StatelessWidget {
           '/': (context) => const _RootRouter(),
           '/login': (context) => const LoginScreen(),
           '/dashboard': (context) => const DashboardScreen(),
+          '/bens': (context) => const BensScreen(),
           '/settings/security': (context) => const SecuritySettingsScreen(),
-          '/bens/novo': (context) => const ComingSoonScreen(
-                title: 'Cadastro de Bens',
-                description:
-                    'Implemente o fluxo FR-BEN-01 para registrar bens com comprovantes e auditoria.',
-                requirementId: 'FR-BEN-01',
-              ),
+          '/bens/novo': (context) => const AssetFormEntryScreen(),
           '/documentos': (context) => const ComingSoonScreen(
                 title: 'Cofre de Documentos',
                 description:
@@ -77,6 +82,31 @@ class EloApp extends StatelessWidget {
                     'Fluxo FR-EME-02 permitirá convites, step-up e auditoria de guardiões.',
                 requirementId: 'FR-EME-02',
               ),
+        },
+        onGenerateRoute: (settings) {
+          final name = settings.name;
+          if (name != null && name.startsWith('/bens/')) {
+            final slug = name.substring('/bens/'.length);
+            if (slug == 'novo') {
+              return MaterialPageRoute<void>(
+                builder: (_) => const AssetFormEntryScreen(),
+                settings: settings,
+              );
+            }
+            if (slug.endsWith('/comprovantes')) {
+              return MaterialPageRoute<void>(
+                builder: (_) => const AssetProofsEntryScreen(),
+                settings: settings,
+              );
+            }
+            if (slug.isNotEmpty) {
+              return MaterialPageRoute<void>(
+                builder: (_) => const AssetDetailEntryScreen(),
+                settings: settings,
+              );
+            }
+          }
+          return null;
         },
       ),
     );

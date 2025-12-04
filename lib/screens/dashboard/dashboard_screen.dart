@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -5,6 +7,8 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../theme/app_theme.dart';
+import '../../services/assets_event_bus.dart';
+import '../common/vault_navigation_bar.dart';
 
 import 'dashboard_controller.dart';
 
@@ -22,6 +26,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   late final bool _ownsController;
   bool _canRender = false;
   late final Future<void> _localeInitialization;
+  StreamSubscription<AssetsEvent>? _assetsEventSub;
+  bool _assetsBusAttached = false;
 
   @override
   void initState() {
@@ -87,10 +93,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _attachAssetsBus();
+  }
+
+  void _attachAssetsBus() {
+    if (_assetsBusAttached) return;
+    final bus = Provider.of<AssetsEventBus>(context, listen: false);
+    _assetsEventSub = bus.stream.listen((event) {
+      _controller.loadInitialData(silent: true);
+    });
+    _assetsBusAttached = true;
+  }
+
+  @override
   void dispose() {
     if (_ownsController) {
       _controller.dispose();
     }
+    _assetsEventSub?.cancel();
     super.dispose();
   }
 
@@ -118,6 +140,8 @@ class _DashboardView extends StatelessWidget {
     final theme = Theme.of(context);
     return Scaffold(
       backgroundColor: const Color(0xFF121212),
+      bottomNavigationBar:
+          const VaultNavigationBar(currentTab: VaultTab.dashboard),
       body: SafeArea(
         child: Consumer<DashboardController>(
           builder: (context, controller, _) {
