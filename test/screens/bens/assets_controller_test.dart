@@ -43,6 +43,8 @@ void main() {
       when(() => repository.currentUserId).thenReturn('user-1');
       when(() => filterStorage.loadFilters(any()))
           .thenAnswer((_) async => const AssetFilters());
+      when(() => repository.fetchProofPresence(any()))
+          .thenAnswer((_) async => {});
       when(() => repository.fetchNetWorthHistoryReference(
             userId: any(named: 'userId'),
             threshold: any(named: 'threshold'),

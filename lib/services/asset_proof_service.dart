@@ -28,61 +28,71 @@ class AssetProofService {
 
   Future<AssetDocumentModel?> pickAndUploadProof(int assetId) async {
     final userId = _requireUserId();
-    final result = await FilePicker.platform.pickFiles(
-      allowMultiple: false,
-      withData: true,
-      type: FileType.custom,
-      allowedExtensions: const ['pdf', 'png', 'jpg', 'jpeg'],
-    );
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        allowMultiple: false,
+        withData: true,
+        type: FileType.custom,
+        allowedExtensions: const ['pdf', 'png', 'jpg', 'jpeg'],
+      );
 
-    if (result == null || result.files.isEmpty) {
-      return null;
+      if (result == null || result.files.isEmpty) {
+        return null;
+      }
+
+      final file = result.files.single;
+      final Uint8List? rawBytes = file.bytes;
+      if (rawBytes == null) {
+        throw StateError('Não foi possível ler o arquivo selecionado.');
+      }
+
+      if (rawBytes.length > _maxFileSizeBytes) {
+        throw StateError('Arquivo acima de 15MB. Escolha um arquivo menor.');
+      }
+
+      final encryption = DocumentEncryptionService(userId: userId);
+      final encrypted = await encryption.encrypt(rawBytes);
+      final storagePath = _buildStoragePath(userId, assetId, file.name);
+
+      await _client.storage.from(_bucketName).uploadBinary(
+            storagePath,
+            encrypted.bytes,
+            fileOptions: const FileOptions(
+              contentType: 'application/octet-stream',
+              upsert: false,
+            ),
+          );
+
+      final document = await _repository.insertAssetDocument(
+        assetId: assetId,
+        storagePath: storagePath,
+        encryptedChecksum: encrypted.checksum,
+        fileType: file.extension,
+      );
+
+      await _repository.updateProofState(assetId: assetId, hasProof: true);
+      await _repository.insertTrustEvent(
+        userId: userId,
+        eventType: 'ASSET_PROOF_UPLOADED',
+        description: 'Comprovante anexado ao bem',
+        metadata: {
+          'asset_id': assetId,
+          'storage_path': storagePath,
+          'file_type': file.extension,
+          'size_bytes': rawBytes.length,
+        },
+      );
+
+      return document;
+    } catch (error) {
+      await _logAssetError(
+        userId: userId,
+        assetId: assetId,
+        action: 'upload',
+        error: error,
+      );
+      rethrow;
     }
-
-    final file = result.files.single;
-    final Uint8List? rawBytes = file.bytes;
-    if (rawBytes == null) {
-      throw StateError('Não foi possível ler o arquivo selecionado.');
-    }
-
-    if (rawBytes.length > _maxFileSizeBytes) {
-      throw StateError('Arquivo acima de 15MB. Escolha um arquivo menor.');
-    }
-
-    final encryption = DocumentEncryptionService(userId: userId);
-    final encrypted = await encryption.encrypt(rawBytes);
-    final storagePath = _buildStoragePath(userId, assetId, file.name);
-
-    await _client.storage.from(_bucketName).uploadBinary(
-          storagePath,
-          encrypted.bytes,
-          fileOptions: const FileOptions(
-            contentType: 'application/octet-stream',
-            upsert: false,
-          ),
-        );
-
-    final document = await _repository.insertAssetDocument(
-      assetId: assetId,
-      storagePath: storagePath,
-      encryptedChecksum: encrypted.checksum,
-      fileType: file.extension,
-    );
-
-    await _repository.updateProofState(assetId: assetId, hasProof: true);
-    await _repository.insertTrustEvent(
-      userId: userId,
-      eventType: 'ASSET_PROOF_UPLOADED',
-      description: 'Comprovante anexado ao bem',
-      metadata: {
-        'asset_id': assetId,
-        'storage_path': storagePath,
-        'file_type': file.extension,
-        'size_bytes': rawBytes.length,
-      },
-    );
-
-    return document;
   }
 
   Future<String> downloadProof(
@@ -94,33 +104,44 @@ class AssetProofService {
           'Download de comprovantes ainda não está disponível no navegador.');
     }
     final userId = _requireUserId();
-    final encryptedBytes =
-        await _client.storage.from(_bucketName).download(document.storagePath);
-    final encryption = DocumentEncryptionService(userId: userId);
-    final Uint8List plainBytes = await encryption.decrypt(encryptedBytes);
-    final fileName = _deriveFileName(document.storagePath);
-    final savedPath = await _fileSaver.save(fileName, plainBytes);
-    await _repository.insertTrustEvent(
-      userId: userId,
-      eventType: 'ASSET_PROOF_DOWNLOADED',
-      description: 'Comprovante baixado localmente',
-      metadata: {
-        'asset_id': document.assetId,
-        'storage_path': document.storagePath,
-      },
-    );
-    if (factorUsed != null) {
-      await _repository.insertStepUpEvent(
+    try {
+      final encryptedBytes = await _client.storage
+          .from(_bucketName)
+          .download(document.storagePath);
+      final encryption = DocumentEncryptionService(userId: userId);
+      final Uint8List plainBytes = await encryption.decrypt(encryptedBytes);
+      final fileName = _deriveFileName(document.storagePath);
+      final savedPath = await _fileSaver.save(fileName, plainBytes);
+      await _repository.insertTrustEvent(
         userId: userId,
         eventType: 'ASSET_PROOF_DOWNLOADED',
-        factorUsed: factorUsed,
-        success: true,
+        description: 'Comprovante baixado localmente',
         metadata: {
           'asset_id': document.assetId,
+          'storage_path': document.storagePath,
         },
       );
+      if (factorUsed != null) {
+        await _repository.insertStepUpEvent(
+          userId: userId,
+          eventType: 'ASSET_PROOF_DOWNLOADED',
+          factorUsed: factorUsed,
+          success: true,
+          metadata: {
+            'asset_id': document.assetId,
+          },
+        );
+      }
+      return savedPath;
+    } catch (error) {
+      await _logAssetError(
+        userId: userId,
+        assetId: document.assetId,
+        action: 'download',
+        error: error,
+      );
+      rethrow;
     }
-    return savedPath;
   }
 
   Future<void> deleteProof(AssetDocumentModel document) async {
@@ -165,5 +186,23 @@ class AssetProofService {
       return raw.substring(0, raw.length - 4);
     }
     return raw;
+  }
+
+  Future<void> _logAssetError({
+    required String userId,
+    required int assetId,
+    required String action,
+    required Object error,
+  }) async {
+    await _repository.insertTrustEvent(
+      userId: userId,
+      eventType: 'ASSET_ERROR',
+      description: 'Falha ao $action comprovante',
+      metadata: {
+        'asset_id': assetId,
+        'action': action,
+        'error': error.toString(),
+      },
+    );
   }
 }

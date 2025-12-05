@@ -344,13 +344,27 @@ class AssetsController extends ChangeNotifier {
   }
 
   Future<void> _recalculateNetWorth(List<AssetModel> source) async {
+    final proofPresence = await _repository.fetchProofPresence(
+      source.map((asset) => asset.id).toList(growable: false),
+    );
+    final normalizedAssets = List<AssetModel>.generate(source.length, (index) {
+      final asset = source[index];
+      final shouldFlag = proofPresence[asset.id];
+      if (shouldFlag == null || shouldFlag == asset.hasProof) {
+        return asset;
+      }
+      final normalized = asset.copyWith(hasProof: shouldFlag);
+      source[index] = normalized;
+      return normalized;
+    }, growable: false);
+
     double assetsTotal = 0;
     double debtsTotal = 0;
     final pendingValuations = <AssetModel>[];
     final fxPending = <String, double>{};
     final breakdown = <AssetCategory, double>{};
 
-    for (final asset in source) {
+    for (final asset in normalizedAssets) {
       if (asset.isArchived) continue;
       final portion = asset.valuePortion;
       if (portion == null) {
@@ -616,6 +630,22 @@ class AssetsController extends ChangeNotifier {
       return original;
     }
     return '$original$suffix';
+  }
+
+  Future<void> logDeleteFallbackEvent({
+    required int assetId,
+    String? constraintCode,
+    String? message,
+  }) async {
+    await _logAssetEvent(
+      'ASSET_DELETE_FALLBACK',
+      'Remoção bloqueada por dependências. Arquivo arquivado automaticamente.',
+      metadata: {
+        'asset_id': assetId,
+        if (constraintCode != null) 'constraint_code': constraintCode,
+        if (message != null) 'error_message': message,
+      },
+    );
   }
 }
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:postgrest/postgrest.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/asset_model.dart';
@@ -224,6 +225,7 @@ class _AssetDetailSheetState extends State<AssetDetailSheet> {
     final controller = widget.controller;
     setState(() => _processing = true);
     final messenger = ScaffoldMessenger.of(context);
+    var completed = false;
     try {
       await controller.deleteAsset(
         _asset.id,
@@ -232,13 +234,26 @@ class _AssetDetailSheetState extends State<AssetDetailSheet> {
       messenger.showSnackBar(
         const SnackBar(content: Text('Bem removido.')),
       );
-      if (mounted) Navigator.of(context).pop();
+      completed = true;
     } catch (error) {
-      messenger.showSnackBar(
-        SnackBar(content: Text('Falha ao remover: $error')),
+      final handled = await _attemptArchiveFallback(
+        controller,
+        messenger,
+        factor,
+        error,
       );
+      completed = handled;
+      if (!handled) {
+        messenger.showSnackBar(
+          SnackBar(content: Text('Falha ao remover: $error')),
+        );
+      }
     } finally {
-      if (mounted) setState(() => _processing = false);
+      if (!mounted) return;
+      setState(() => _processing = false);
+      if (completed) {
+        Navigator.of(context).pop();
+      }
     }
   }
 
@@ -711,6 +726,64 @@ class _AssetDetailSheetState extends State<AssetDetailSheet> {
         asset: _asset,
       ),
     );
+  }
+
+  Future<bool> _attemptArchiveFallback(
+    AssetsController controller,
+    ScaffoldMessengerState messenger,
+    String? factor,
+    Object error,
+  ) async {
+    if (!_isConstraintViolation(error)) {
+      return false;
+    }
+    await controller.logDeleteFallbackEvent(
+      assetId: _asset.id,
+      constraintCode: _constraintCode(error),
+      message: error.toString(),
+    );
+    try {
+      await controller.archiveAsset(
+        _asset.id,
+        factorUsed: factor,
+      );
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Encontramos dependências ligadas a este bem. Arquivamos para preservar o histórico.',
+          ),
+        ),
+      );
+      return true;
+    } catch (archiveError) {
+      messenger.showSnackBar(
+        SnackBar(content: Text('Falha ao arquivar: $archiveError')),
+      );
+      return false;
+    }
+  }
+
+  bool _isConstraintViolation(Object error) {
+    if (error is PostgrestException) {
+      final code = error.code?.toUpperCase();
+      if (code == '23503' || code == '23505') {
+        return true;
+      }
+      final details = (error.details as String?)?.toLowerCase() ?? '';
+      if (details.contains('violates foreign key constraint')) {
+        return true;
+      }
+      final message = error.message.toLowerCase();
+      return message.contains('constraint');
+    }
+    return false;
+  }
+
+  String? _constraintCode(Object error) {
+    if (error is PostgrestException) {
+      return error.code;
+    }
+    return null;
   }
 }
 

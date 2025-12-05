@@ -86,6 +86,25 @@ class AssetsRepository {
     return data.map(AssetDocumentModel.fromMap).toList();
   }
 
+  Future<Map<int, bool>> fetchProofPresence(List<int> assetIds) async {
+    if (assetIds.isEmpty) return const {};
+    final uniqueIds = assetIds.toSet().toList(growable: false);
+    final filterList = uniqueIds.join(',');
+    final response = await _client
+        .from('asset_documents')
+        .select('asset_id')
+        .filter('asset_id', 'in', '($filterList)');
+    final data = (response as List<dynamic>).cast<Map<String, dynamic>>();
+    final presence = <int, bool>{};
+    for (final row in data) {
+      final assetId = row['asset_id'];
+      if (assetId is int) {
+        presence[assetId] = true;
+      }
+    }
+    return presence;
+  }
+
   Future<AssetModel> insertAsset(AssetInput input) async {
     final userId = currentUserId;
     if (userId == null) {

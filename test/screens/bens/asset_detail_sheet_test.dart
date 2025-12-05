@@ -8,6 +8,7 @@ import 'package:elo/services/fx_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:postgrest/postgrest.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -111,6 +112,26 @@ void main() {
       expect(find.textContaining('ID 42'), findsNothing);
       expect(find.text('Pendente'), findsOneWidget);
     });
+
+    testWidgets('fallbacks to archive when delete is blocked', (tester) async {
+      final controller = _TestAssetsController(deleteShouldFail: true);
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(_buildHarness(controller: controller));
+      await tester.pumpAndSettle();
+
+      await _tapAndSettle(tester, find.text('Remover'));
+      await tester.tap(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.text('Remover'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(controller.archiveInvoked, isTrue);
+      expect(controller.fallbackLogged, isTrue);
+    });
   });
 }
 
@@ -161,8 +182,10 @@ Future<void> _tapAndSettle(WidgetTester tester, Finder finder) async {
 }
 
 class _TestAssetsController extends AssetsController {
-  _TestAssetsController({List<AssetDocumentModel> initialDocuments = const []})
-      : _documents = List<AssetDocumentModel>.from(initialDocuments),
+  _TestAssetsController({
+    List<AssetDocumentModel> initialDocuments = const [],
+    this.deleteShouldFail = false,
+  })  : _documents = List<AssetDocumentModel>.from(initialDocuments),
         super(
           repository: AssetsRepository(),
           fxService: FxService(),
@@ -172,6 +195,9 @@ class _TestAssetsController extends AssetsController {
 
   final List<AssetDocumentModel> _documents;
   int _sequence = 1000;
+  final bool deleteShouldFail;
+  bool archiveInvoked = false;
+  bool fallbackLogged = false;
 
   @override
   Future<List<AssetDocumentModel>> loadAssetDocuments(int assetId) async {
@@ -205,6 +231,37 @@ class _TestAssetsController extends AssetsController {
     String? factorUsed,
   }) async {
     return '/tmp/${document.id}.pdf';
+  }
+
+  @override
+  Future<void> deleteAsset(
+    int assetId, {
+    String? factorUsed,
+  }) async {
+    if (deleteShouldFail) {
+      throw PostgrestException(
+        code: '23503',
+        message: 'violates foreign key constraint',
+        details: 'violates foreign key constraint',
+      );
+    }
+  }
+
+  @override
+  Future<void> archiveAsset(
+    int assetId, {
+    String? factorUsed,
+  }) async {
+    archiveInvoked = true;
+  }
+
+  @override
+  Future<void> logDeleteFallbackEvent({
+    required int assetId,
+    String? constraintCode,
+    String? message,
+  }) async {
+    fallbackLogged = true;
   }
 }
 

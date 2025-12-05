@@ -51,7 +51,11 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await tester.drag(find.byType(ListView), const Offset(0, -800));
+      await tester.dragUntilVisible(
+        find.byKey(const ValueKey('checklist_asset')),
+        find.byType(ListView),
+        const Offset(0, -200),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('Checklist FLX-01'), findsOneWidget);
