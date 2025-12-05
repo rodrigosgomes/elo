@@ -938,10 +938,10 @@ class _AssetCardState extends State<_AssetCard> {
           ],
         ),
         trailing: Column(
+          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             _StatusPill(status: _asset.status),
-            const SizedBox(height: 8),
             Icon(
               _asset.hasProof
                   ? Icons.verified_outlined

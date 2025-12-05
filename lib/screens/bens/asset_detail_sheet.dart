@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:postgrest/postgrest.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../models/asset_model.dart';
 import '../common/step_up_prompt.dart';
@@ -249,11 +249,13 @@ class _AssetDetailSheetState extends State<AssetDetailSheet> {
         );
       }
     } finally {
-      if (!mounted) return;
-      setState(() => _processing = false);
-      if (completed) {
-        Navigator.of(context).pop();
+      if (mounted) {
+        setState(() => _processing = false);
       }
+    }
+    if (!mounted) return;
+    if (completed) {
+      Navigator.of(context).pop();
     }
   }
 

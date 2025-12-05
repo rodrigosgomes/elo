@@ -6,11 +6,13 @@ Future<String?> showStepUpPrompt({
   required String actionLabel,
 }) async {
   final preferredMethod = await _fetchPreferredStepUpMethod();
+  if (!context.mounted) return null;
   if (preferredMethod == StepUpMethod.masterPassword) {
     final approved = await _showMasterPasswordSheet(context, actionLabel);
     return approved == true ? preferredMethod.identifier : null;
   }
 
+  if (!context.mounted) return null;
   final decision = await showModalBottomSheet<_PreferredFlowDecision>(
     context: context,
     backgroundColor: const Color(0xFF161A1E),
@@ -29,6 +31,7 @@ Future<String?> showStepUpPrompt({
     return preferredMethod.identifier;
   }
   if (decision == _PreferredFlowDecision.fallback) {
+    if (!context.mounted) return null;
     final approved = await _showMasterPasswordSheet(context, actionLabel);
     if (approved == true) {
       return StepUpMethod.masterPassword.identifier;
