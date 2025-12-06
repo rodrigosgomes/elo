@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/asset_model.dart';
@@ -23,47 +24,59 @@ class AssetsRepository {
     }
 
     final rangeEnd = offset + limit - 1;
-    final request = _client.from('assets').select('*');
-    request.eq('user_id', userId);
+    var request = _client.from('assets').select('*');
+    request = request.eq('user_id', userId);
+
+    if (kDebugMode) {
+      debugPrint(
+        '[AssetsRepository] fetchAssets offset=$offset limit=$limit '
+        'categories=${filters.categories.map((c) => c.supabaseValue).join(',')} '
+        'statuses=${filters.statuses.map((s) => s.supabaseValue).join(',')} '
+        'hasProof=${filters.hasProof}',
+      );
+    }
 
     if (filters.categories.isNotEmpty) {
-      final values = filters.categories.map((c) => '"${c.supabaseValue}"');
-      request.filter('category', 'in', '(${values.join(',')})');
+      final values = filters.categories
+          .map((category) => '"${category.supabaseValue}"')
+          .join(',');
+      request = request.filter('category', 'in', '($values)');
     }
 
     if (filters.statuses.isNotEmpty) {
-      final values =
-          filters.statuses.map((status) => '"${status.supabaseValue}"');
-      request.filter('status', 'in', '(${values.join(',')})');
+      final values = filters.statuses
+          .map((status) => '"${status.supabaseValue}"')
+          .join(',');
+      request = request.filter('status', 'in', '($values)');
     }
 
     if (filters.hasProof != null) {
-      request.eq('has_proof', filters.hasProof!);
+      request = request.eq('has_proof', filters.hasProof!);
     }
 
     if (filters.currency != null && filters.currency!.isNotEmpty) {
-      request.eq('value_currency', filters.currency!.toUpperCase());
+      request = request.eq('value_currency', filters.currency!.toUpperCase());
     }
 
     if (filters.minValue != null) {
-      request.gte('value_estimated', filters.minValue!);
+      request = request.gte('value_estimated', filters.minValue!);
     }
 
     if (filters.maxValue != null) {
-      request.lte('value_estimated', filters.maxValue!);
+      request = request.lte('value_estimated', filters.maxValue!);
     }
 
     if (filters.minOwnership != null) {
-      request.gte('ownership_percentage', filters.minOwnership!);
+      request = request.gte('ownership_percentage', filters.minOwnership!);
     }
 
     if (filters.maxOwnership != null) {
-      request.lte('ownership_percentage', filters.maxOwnership!);
+      request = request.lte('ownership_percentage', filters.maxOwnership!);
     }
 
     if (filters.searchTerm != null && filters.searchTerm!.trim().length > 2) {
       final term = filters.searchTerm!.trim();
-      request.or(
+      request = request.or(
         'title.ilike.%$term%,description.ilike.%$term%',
       );
     }

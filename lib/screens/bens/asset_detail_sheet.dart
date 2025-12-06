@@ -95,7 +95,11 @@ class _AssetDetailSheetState extends State<AssetDetailSheet> {
   void initState() {
     super.initState();
     _asset = widget.asset;
-    _loadDocuments();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _loadDocuments();
+      }
+    });
   }
 
   @override
