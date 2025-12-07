@@ -10,7 +10,7 @@
 
 ## Inventário Patrimonial
 
-[ ] prompt_03_inventario_de_bens_e_patrimonio.md — Implementar CRUD completo, máscara monetária, comprovantes e patrimônio líquido com Provider, alimentando o checklist do Dashboard.
+[x] prompt_03_inventario_de_bens_e_patrimonio.md — Implementar CRUD completo, máscara monetária, comprovantes e patrimônio líquido com Provider, alimentando o checklist do Dashboard.
 
 ## Cofre de Documentos
 

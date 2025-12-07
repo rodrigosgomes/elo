@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../services/assets_event_bus.dart';
 import '../../services/fx_service.dart';
 import 'dashboard_repository.dart';
 
@@ -11,15 +13,19 @@ class DashboardController extends ChangeNotifier {
   DashboardController({
     DashboardRepository? repository,
     FxService? fxService,
+    AssetsEventBus? assetsEventBus,
     this.testUserId,
   })  : _repository = repository ?? SupabaseDashboardRepository(),
         _fxService = fxService ?? FxService(),
-        _ownsFxService = fxService == null;
+        _ownsFxService = fxService == null,
+        _assetsEventBus = assetsEventBus;
 
   final DashboardRepository _repository;
   final FxService _fxService;
   final bool _ownsFxService;
   final String? testUserId;
+  final AssetsEventBus? _assetsEventBus;
+  StreamSubscription<AssetsEvent>? _assetsEventSubscription;
 
   DashboardViewData _data = DashboardViewData.initial();
   bool _isLoading = true;
@@ -47,6 +53,7 @@ class DashboardController extends ChangeNotifier {
     if (_disposed) return;
     await loadInitialData();
     await _initRealtimeChannel();
+    _subscribeToAssetsEvents();
   }
 
   Future<void> loadInitialData({bool silent = false}) async {
@@ -498,10 +505,23 @@ class DashboardController extends ChangeNotifier {
   void dispose() {
     _disposed = true;
     _channel?.unsubscribe();
+    _assetsEventSubscription?.cancel();
     if (_ownsFxService) {
       _fxService.dispose();
     }
     super.dispose();
+  }
+
+  void _subscribeToAssetsEvents() {
+    if (_assetsEventBus == null) return;
+    _assetsEventSubscription = _assetsEventBus!.stream.listen((event) {
+      if (_disposed) return;
+      switch (event.type) {
+        case AssetsEventType.netWorthChanged:
+        case AssetsEventType.checklistUpdated:
+          loadInitialData(silent: true);
+      }
+    });
   }
 }
 

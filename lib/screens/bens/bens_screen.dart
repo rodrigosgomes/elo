@@ -15,7 +15,12 @@ import '../common/step_up_prompt.dart';
 import '../common/vault_navigation_bar.dart';
 
 class BensScreen extends StatefulWidget {
-  const BensScreen({super.key});
+  const BensScreen({
+    super.key,
+    this.controller,
+  });
+
+  final AssetsController? controller;
 
   @override
   State<BensScreen> createState() => _BensScreenState();
@@ -27,14 +32,21 @@ class _BensScreenState extends State<BensScreen> {
   @override
   void initState() {
     super.initState();
-    final eventBus = Provider.of<AssetsEventBus>(context, listen: false);
-    _controller = AssetsController(eventBus: eventBus);
+    if (widget.controller != null) {
+      _controller = widget.controller!;
+    } else {
+      final eventBus = Provider.of<AssetsEventBus>(context, listen: false);
+      _controller = AssetsController(eventBus: eventBus);
+    }
+
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final session = Supabase.instance.client.auth.currentSession;
-      if (!mounted) return;
-      if (session == null) {
-        Navigator.of(context).pushNamedAndRemoveUntil('/login', (_) => false);
-        return;
+      if (widget.controller == null) {
+        final session = Supabase.instance.client.auth.currentSession;
+        if (!mounted) return;
+        if (session == null) {
+          Navigator.of(context).pushNamedAndRemoveUntil('/login', (_) => false);
+          return;
+        }
       }
       await _controller.bootstrap();
     });
@@ -42,7 +54,9 @@ class _BensScreenState extends State<BensScreen> {
 
   @override
   void dispose() {
-    _controller.dispose();
+    if (widget.controller == null) {
+      _controller.dispose();
+    }
     super.dispose();
   }
 
