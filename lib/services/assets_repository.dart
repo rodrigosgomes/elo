@@ -338,7 +338,7 @@ class AssetsRepository {
       'has_asset': true,
       'protection_ring_score': score,
       'updated_at': DateTime.now().toUtc().toIso8601String(),
-    });
+    }, onConflict: 'user_id');
     return ChecklistAssetUpdateResult(
       unlockedAsset: true,
       checklistCompleted: hasGuardian && lifeCheckEnabled,

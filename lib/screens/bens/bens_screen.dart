@@ -65,23 +65,33 @@ class _BensView extends StatelessWidget {
       backgroundColor: const Color(0xFF121212),
       bottomNavigationBar: const VaultNavigationBar(currentTab: VaultTab.bens),
       appBar: AppBar(
-        title: const Text('Inventário Patrimonial'),
+        title: Text(
+          'Patrimônio Pessoal',
+          style: theme.textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        centerTitle: false,
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.search),
-            tooltip: 'Buscar',
-            onPressed: () => _showSearchSheet(context),
+            icon: const Icon(Icons.tune),
+            tooltip: 'Filtros avançados',
+            onPressed: () {
+              final controller = context.read<AssetsController>();
+              _showAdvancedFiltersSheet(context, controller);
+            },
           ),
-          TextButton(
+          IconButton(
+            icon: const Icon(Icons.file_download_outlined),
+            tooltip: 'Exportar dados',
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                     content: Text('Em breve: exportação em PDF/CSV.')),
               );
             },
-            child: const Text('Exportar'),
           ),
           const SizedBox(width: 8),
         ],
@@ -120,20 +130,20 @@ class _BensView extends StatelessWidget {
                   slivers: [
                     SliverToBoxAdapter(
                       child: Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+                        child: _FiltersBar(controller: controller),
+                      ),
+                    ),
+                    SliverToBoxAdapter(
+                      child: Padding(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 24, vertical: 16),
+                            horizontal: 24, vertical: 8),
                         child: _NetWorthCard(
                           summary: controller.netWorth,
                           assetCount: controller.assets.length,
                           onViewDetails: () => _showNetWorthBreakdownSheet(
                               context, controller.netWorth),
                         ),
-                      ),
-                    ),
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        child: _FiltersBar(controller: controller),
                       ),
                     ),
                     if (controller.assets.isEmpty)
@@ -174,58 +184,6 @@ class _BensView extends StatelessWidget {
       ),
     );
   }
-}
-
-void _showSearchSheet(BuildContext context) {
-  final controller = context.read<AssetsController>();
-  final textController = TextEditingController(
-    text: controller.filters.searchTerm ?? '',
-  );
-
-  showModalBottomSheet(
-    context: context,
-    backgroundColor: const Color(0xFF161A1E),
-    isScrollControlled: true,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-    ),
-    builder: (bottomSheetContext) {
-      return Padding(
-        padding: EdgeInsets.only(
-          left: 24,
-          right: 24,
-          top: 24,
-          bottom: MediaQuery.of(bottomSheetContext).viewInsets.bottom + 24,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextField(
-              controller: textController,
-              autofocus: true,
-              decoration: const InputDecoration(
-                labelText: 'Buscar bens',
-                prefixIcon: Icon(Icons.search),
-              ),
-              onChanged: controller.updateSearchTerm,
-            ),
-            const SizedBox(height: 16),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: () {
-                  controller.clearFilters();
-                  Navigator.of(bottomSheetContext).pop();
-                },
-                child: const Text('Limpar filtros'),
-              ),
-            ),
-          ],
-        ),
-      );
-    },
-  );
 }
 
 void _showNetWorthBreakdownSheet(
@@ -275,16 +233,6 @@ class _NetWorthCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final formatter = NumberFormat.simpleCurrency(locale: 'pt_BR');
-    final chips = summary.breakdownByCategory.entries
-        .map(
-          (entry) => Chip(
-            label: Text(
-              '${entry.key.label}: ${formatter.format(entry.value)}',
-            ),
-          ),
-        )
-        .toList();
-
     return Card(
       color: const Color(0xFF161A1E),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -313,14 +261,6 @@ class _NetWorthCard extends StatelessWidget {
                 color: theme.textSecondary,
               ),
             ),
-            if (chips.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: chips,
-              ),
-            ],
             if (summary.pendingValuations.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: 12),
@@ -376,16 +316,7 @@ class _VariationRow extends StatelessWidget {
     }
 
     if (summary.hasInsufficientHistory) {
-      return Row(
-        children: [
-          Icon(Icons.info_outline, size: 18, color: theme.warning),
-          const SizedBox(width: 6),
-          Text(
-            '--  Histórico insuficiente',
-            style: theme.textTheme.bodySmall?.copyWith(color: theme.warning),
-          ),
-        ],
-      );
+      return const SizedBox.shrink();
     }
 
     return Text(
@@ -758,66 +689,38 @@ class _AdvancedFiltersSheetState extends State<_AdvancedFiltersSheet> {
   }
 }
 
-class _FiltersBar extends StatefulWidget {
+class _FiltersBar extends StatelessWidget {
   const _FiltersBar({required this.controller});
 
   final AssetsController controller;
 
-  @override
-  State<_FiltersBar> createState() => _FiltersBarState();
-}
-
-class _FiltersBarState extends State<_FiltersBar> {
-  late final TextEditingController _searchController;
-
-  @override
-  void initState() {
-    super.initState();
-    _searchController = TextEditingController(
-      text: widget.controller.filters.searchTerm ?? '',
-    );
-  }
-
-  @override
-  void didUpdateWidget(covariant _FiltersBar oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    final nextValue = widget.controller.filters.searchTerm ?? '';
-    if (_searchController.text != nextValue) {
-      _searchController.value = TextEditingValue(
-        text: nextValue,
-        selection: TextSelection.collapsed(offset: nextValue.length),
-      );
+  IconData _getCategoryIcon(AssetCategory category) {
+    switch (category) {
+      case AssetCategory.imoveis:
+        return Icons.domain_outlined;
+      case AssetCategory.veiculos:
+        return Icons.directions_car_filled_outlined;
+      case AssetCategory.financeiro:
+        return Icons.savings_outlined;
+      case AssetCategory.cripto:
+        return Icons.currency_bitcoin;
+      case AssetCategory.dividas:
+        return Icons.receipt_long_outlined;
     }
   }
 
   @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final controller = widget.controller;
-    final selectedProof = _selectedProofFilter(controller.filters);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        TextField(
-          controller: _searchController,
-          decoration: const InputDecoration(
-            labelText: 'Buscar bens',
-            prefixIcon: Icon(Icons.search),
-          ),
-          onChanged: controller.updateSearchTerm,
-        ),
-        const SizedBox(height: 16),
         Wrap(
           spacing: 8,
           runSpacing: 8,
           children: [
             FilterChip(
-              label: const Text('Todos'),
+              tooltip: 'Todos',
+              label: const Icon(Icons.all_inclusive, size: 18),
               selected: controller.filters.categories.isEmpty,
               onSelected: (_) => controller.applyAdvancedFilters(
                 controller.filters.copyWith(categories: <AssetCategory>{}),
@@ -825,51 +728,16 @@ class _FiltersBarState extends State<_FiltersBar> {
             ),
             ...AssetCategory.values.map(
               (category) => FilterChip(
-                label: Text(category.label),
+                tooltip: category.label,
+                label: Icon(_getCategoryIcon(category), size: 18),
                 selected: controller.filters.categories.contains(category),
                 onSelected: (_) => controller.toggleCategory(category),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 12),
-        Align(
-          alignment: Alignment.centerRight,
-          child: FilledButton.tonalIcon(
-            onPressed: () => _showAdvancedFiltersSheet(context, controller),
-            icon: const Icon(Icons.tune),
-            label: const Text('Filtrar'),
-          ),
-        ),
-        const SizedBox(height: 12),
-        SegmentedButton<ProofFilter>(
-          segments: const [
-            ButtonSegment(
-              value: ProofFilter.all,
-              label: Text('Todos'),
-            ),
-            ButtonSegment(
-              value: ProofFilter.withProof,
-              label: Text('Com comprovante'),
-            ),
-            ButtonSegment(
-              value: ProofFilter.withoutProof,
-              label: Text('Sem comprovante'),
-            ),
-          ],
-          selected: {selectedProof},
-          onSelectionChanged: (selection) {
-            if (selection.isEmpty) return;
-            controller.setProofFilter(selection.first);
-          },
-        ),
       ],
     );
-  }
-
-  ProofFilter _selectedProofFilter(AssetFilters filters) {
-    if (filters.hasProof == null) return ProofFilter.all;
-    return filters.hasProof! ? ProofFilter.withProof : ProofFilter.withoutProof;
   }
 }
 

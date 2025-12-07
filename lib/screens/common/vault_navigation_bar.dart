@@ -41,7 +41,7 @@ class VaultNavigationBar extends StatelessWidget {
         NavigationDestination(
           icon: Icon(Icons.inventory_2_outlined),
           selectedIcon: Icon(Icons.inventory_2),
-          label: 'Bens',
+          label: 'Patrimônio',
         ),
       ],
       labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
