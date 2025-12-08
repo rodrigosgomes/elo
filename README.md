@@ -1,94 +1,73 @@
-﻿# Elo Flutter App
+﻿# Elo — Gestão de Legado Digital
 
-A modern Flutter application that pairs Supabase Auth/Realtime with a Material 3 Dark Luxury experience. The MVP focuses on the "The Vault" dashboard plus the Bens, Documentos, Legado, Diretivas e Emergência journeys described in the PRD.
+Elo é o "Cofre da Vida" que conecta os bens, documentos e diretivas de um legado digital com protocolos de emergência, tudo protegido por uma arquitetura zero-knowledge em Flutter + Supabase. O MVP entrega os pilares dashboard, bens, documentos, legado/diretivas e emergência descritos no PRD (docs/01-product/prd-geral.md) e é calibrado para clientes que valorizam segurança, clareza e governança para quem fica.
 
-## Features
+## MVP em foco
 
-- Supabase authentication with session-aware routing and logout flows
-- Material 3 login screen with cadastro, reset de senha e redirecionamento seguro ao dashboard
-- Dashboard "The Vault" featuring checklist FLX-01, KPI telemetry, pillar cards, and timeline actions
-- Real-time synchronization plus trust/audit event logging
-- Material 3 Dark Luxury theme with accessibility-friendly tokens
-- Provider-based controllers (e.g., `DashboardController`) orchestrating Supabase queries and telemetry
-- Local storage + HTTP FX service for cached currency conversion when summarising assets
+- **Dashboard (The Vault)**: anel de proteção, cartões dos pilares, status didático (Seguro/Atenção) e checklist FLX-01 com CTA para adicionar 1 bem, 1 guardião e ativar verificação de vida. Banner persistente lembra 2FA até a autenticação de segundo fator estar ativa.
+- **Bens (Inventário Patrimonial)**: CRUD com categorias (Imóveis, Veículos, Financeiro, Cripto, Dívidas), máscara monetária, indicador de valor desconhecido, upload criptografado de comprovantes e filtros/ busca baseados em categoria/status, combustível para o cálculo automático de patrimônio líquido.
+- **Documentos (Cofre de Documentos)**: upload de até 10 MB com criptografia client-side, fila de reenvio e badges “Encrypted”; metadados, tags inteligentes e operação segura para renomear, baixar e, futuramente, compartilhar links medidos.
+- **Emergência (Protocolo Dead Man's Switch)**: guardiões verificados, timer de inatividade (30/60/90 dias), verificação de vida (push/email) com step-up, timeline de eventos e opção de teste simulado; liberações condicionais a escopos (total/documentos) conforme FR-EME.
+- **Legado Digital & Diretivas**: catálogo de contas estratégicas, ações (excluir/memorializar/transferir), cofre de credenciais mestras com camada extra, assinaturas recorrentes marcadas para cancelamento em emergência, diretivas médicas, preferências de funeral e cápsula do tempo multi-mídia para mensagens futuras.
 
-## Prerequisites
+## Segurança e confiança
 
-- Flutter SDK 3.0.0+
-- Dart 3.0.0+
-- Active Supabase project (URL + anon key)
+- Arquitetura zero-knowledge com criptografia AES-256 em repouso, TLS 1.3 em trânsito e chaves do usuário armazenadas com suporte a Secure Enclave / Keystore.
+- 2FA obrigatória e step-up para ações críticas; eventos de confiança e step-up registrados em `trust_events` e `step_up_events`.
+- RLS em todas as tabelas Supabase (`assets`, `documents`, `guardians`, `emergency_*`, etc.). Consulte os tipos customizados e políticas recomendadas no resumo de schema (`docs/02-architecture/supabase_schema.md`).
+- Fluxos de recuperação guiados com seed hint e métricas de disponibilidade visualizadas diretamente no dashboard.
 
-## Setup Instructions
+## Arquitetura e dados
 
-1. **Provide Supabase Credentials via `--dart-define`**
+- Frontend: Flutter 3 mantendo estado em Provider/ChangeNotifier; telas em `lib/screens/*`, serviços em `lib/services/*` e theming Dark Luxury em `lib/theme/app_theme.dart`.
+- Supabase (Auth, PostgREST, Storage, Realtime); a configuração dinâmica vive em `lib/config/app_config.dart`, que lê valores via `--dart-define`.
+- Controle de uploads, buckets e políticas devem sempre acompanhar o plano `docs/01-product/prd-geral.md` e o schema `supabase/schema.sql`; extensões e triggers são discutidas em `docs/02-architecture/adr/`.
+- Telemetria mínima: onboarding, uploads, checklist, protocolo, diretivas e legado; KPIs (KPI-ATV, KPI-RET, KPI-CONV, KPI-NPS) instrumentados em `kpi_metrics`.
 
-   `lib/config/app_config.dart` reads runtime values from compile-time defines. Run Flutter commands with:
+## Configuração local
 
-   ```bash
+1. Instale o Flutter 3+ e o Dart 3+; use o canal estável.
+1. Configure variáveis via `--dart-define` antes de rodar:
+
+  ```bash
    flutter run \
-     --dart-define=SUPABASE_URL=https://xyzcompany.supabase.co \
-     --dart-define=SUPABASE_ANON_KEY=your-anon-key \
-     --dart-define=SUPABASE_EMAIL_REDIRECT_URL=https://xyzcompany.supabase.co/auth/v1/callback
-   ```
+     --dart-define=SUPABASE_URL=https://<seu>.supabase.co \
+     --dart-define=SUPABASE_ANON_KEY=<anon-key> \
+     --dart-define=SUPABASE_EMAIL_REDIRECT_URL=https://<seu>.supabase.co/auth/v1/callback
+  ```
 
-   The redirect override is optional; if omitted the config defaults to `<SUPABASE_URL>/auth/v1/callback`.
+1. Instale dependências com `flutter pub get` e sincronize qualquer bucket/policy do Supabase executando `supabase/schema.sql`.
 
-2. **Install Dependencies**
-
-   ```bash
-   flutter pub get
-   ```
-
-3. **Run the App**
-
-   ```bash
-   flutter run
-   ```
-
-4. **Run Dashboard Tests**
-
-   ```bash
-   flutter test test/screens/dashboard/dashboard_screen_test.dart
-   ```
-
-## Project Structure
-
-```text
-lib/
-  main.dart                       # App entry point + routing guard
-  screens/
-    login_screen.dart            # Auth UI
-    dashboard/
-      dashboard_screen.dart      # The Vault UI & widgets
-      dashboard_controller.dart  # Provider/controller + telemetry helpers
-      dashboard_repository.dart  # Supabase data access layer
-    settings/security_settings_screen.dart
-    common/coming_soon_screen.dart
-  services/
-    auth_service.dart
-    fx_service.dart
-  theme/app_theme.dart            # Dark Luxury tokens + extensions
-```
-
-## Configuration
-
-- Centralized in `lib/config/app_config.dart`; set values with `--dart-define` or your launch configuration.
-- Keep Supabase keys outside the repo and avoid hard-coding secrets.
-- Reference `docs/04-guides/setup-ambiente.md` for environment specifics and PRD links.
-
-## Development
+## Desenvolvimento e qualidade
 
 - Lint: `flutter analyze`
-- Format: `dart format .`
-- Tests: `flutter test` (or specific suites as above)
-- When adding Supabase tables/policies, align with `docs/05-prompts` and the data-model prompt.
+- Formatação: `dart format .`
+- Testes: `flutter test` (ou `flutter test test/screens/...` para suites específicas).
+- Observabilidade: adicione logs em `services`/`controllers` para capturar taxa de sucesso do checklist e dos uploads, mantendo sus métricas no Supabase.
 
-## Deployment
+## Métricas e instrumentação
 
-- Android: `flutter build apk` / `flutter build appbundle`
+- KPI-ATV: percentual de usuários que completam a checklist de ativação (1 bem + 1 guardião + verificação de vida).
+- KPI-RET: check-ins mensais do protocolo de emergência.
+- KPI-CONV: número de pilares com 2+ seções completas.
+- KPI-NPS: pesquisa pós-teste do protocolo e eventos de confiança gravados em `trust_events`.
+- Todos os eventos críticos (upload iniciado/concluído, protocolo ativado/teste) são logados para auditoria.
+
+## Implantação
+
+- Android: `flutter build apk` ou `flutter build appbundle`
 - iOS: `flutter build ios`
-- Web/Desktop: `flutter build web` / `flutter build windows` (as needed)
+- Web/Desktop: `flutter build web` / `flutter build windows`
+- Lembre de ajustar os `--dart-define` e variáveis de ambiente no CI antes de cada build.
 
-## License
+## Documentação complementar
+
+- PRD completo e roadmap: `docs/01-product/prd-geral.md`
+- Schema e tipos Supabase: `docs/02-architecture/supabase_schema.md` e `supabase/schema.sql`
+- Setup detalhado: `docs/04-guides/setup-ambiente.md`
+- Design tokens e protótipos Dark Luxury: `docs/03-design/design-system.md` + `docs/03-design/prototype/`
+- ADRs e decisões técnicas: `docs/02-architecture/adr/`
+
+## Licença
 
 MIT License
