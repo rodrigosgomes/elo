@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 enum VaultTab {
   dashboard,
   bens,
+  documentos,
 }
 
 class VaultNavigationBar extends StatelessWidget {
@@ -13,6 +14,7 @@ class VaultNavigationBar extends StatelessWidget {
   static const _tabs = <VaultTab>[
     VaultTab.dashboard,
     VaultTab.bens,
+    VaultTab.documentos,
   ];
 
   @override
@@ -43,6 +45,11 @@ class VaultNavigationBar extends StatelessWidget {
           selectedIcon: Icon(Icons.inventory_2),
           label: 'Patrimônio',
         ),
+        NavigationDestination(
+          icon: Icon(Icons.folder_outlined),
+          selectedIcon: Icon(Icons.folder),
+          label: 'Documentos',
+        ),
       ],
       labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
       indicatorColor: theme.colorScheme.primary.withValues(alpha: 0.12),
@@ -55,6 +62,8 @@ class VaultNavigationBar extends StatelessWidget {
         return '/dashboard';
       case VaultTab.bens:
         return '/bens';
+      case VaultTab.documentos:
+        return '/documentos';
     }
   }
 }

@@ -11,6 +11,7 @@ import 'screens/bens/asset_form_sheet.dart';
 import 'screens/bens/asset_proofs_sheet.dart';
 import 'screens/bens/bens_screen.dart';
 import 'screens/settings/security_settings_screen.dart';
+import 'screens/documents/documents_screen.dart';
 import 'services/assets_event_bus.dart';
 import 'services/auth_service.dart';
 import 'theme/app_theme.dart';
@@ -58,12 +59,7 @@ class EloApp extends StatelessWidget {
           '/bens': (context) => const BensScreen(),
           '/settings/security': (context) => const SecuritySettingsScreen(),
           '/bens/novo': (context) => const AssetFormEntryScreen(),
-          '/documentos': (context) => const ComingSoonScreen(
-                title: 'Cofre de Documentos',
-                description:
-                    'Fluxos FR-DOC-01..05 serão conectados aqui mantendo uploads resilientes.',
-                requirementId: 'FR-DOC-01',
-              ),
+          '/documentos': (context) => const DocumentsScreen(),
           '/legado': (context) => const ComingSoonScreen(
                 title: 'Legado Digital',
                 description:
