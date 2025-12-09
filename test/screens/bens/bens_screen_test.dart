@@ -5,7 +5,6 @@ import 'package:elo/screens/common/vault_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:provider/provider.dart';
 
 class MockAssetsController extends Mock implements AssetsController {}
 
