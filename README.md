@@ -29,12 +29,12 @@ Elo é o "Cofre da Vida" que conecta os bens, documentos e diretivas de um legad
 1. Instale o Flutter 3+ e o Dart 3+; use o canal estável.
 1. Configure variáveis via `--dart-define` antes de rodar:
 
-  ```bash
-   flutter run \
-     --dart-define=SUPABASE_URL=https://<seu>.supabase.co \
-     --dart-define=SUPABASE_ANON_KEY=<anon-key> \
-     --dart-define=SUPABASE_EMAIL_REDIRECT_URL=https://<seu>.supabase.co/auth/v1/callback
-  ```
+```bash
+ flutter run \
+   --dart-define=SUPABASE_URL=https://<seu>.supabase.co \
+   --dart-define=SUPABASE_ANON_KEY=<anon-key> \
+   --dart-define=SUPABASE_EMAIL_REDIRECT_URL=https://<seu>.supabase.co/auth/v1/callback
+```
 
 1. Instale dependências com `flutter pub get` e sincronize qualquer bucket/policy do Supabase executando `supabase/schema.sql`.
 
